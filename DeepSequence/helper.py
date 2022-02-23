@@ -80,7 +80,7 @@ class DataHelper:
         self.wt_elbo = None
 
         # Alignment processing parameters
-        self.theta = 0.2
+        self.theta = theta if theta is not None else 0.2
 
         # If I am running tests with the model, I don't need all the
         #    sequences loaded
