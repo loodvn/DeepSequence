@@ -7,13 +7,16 @@ import numpy as np
 import theano
 import theano.tensor as T
 
-tqdm_available = False  # True # tqdm is too spammy in the logs and I don't want to figure it out
 try:
     from tqdm import tqdm
+
+    tqdm_available = True
 except ImportError:
     tqdm = lambda x: x  # noop
     tqdm_available = False
 
+
+# tqdm_available = False  # tqdm is too spammy in the logs and I don't want to figure it out
 
 
 class DataHelper:
@@ -27,8 +30,6 @@ class DataHelper:
                  load_all_sequences=True,
                  alphabet_type="protein",
                  weights_dir="",
-                 save_weights=False,
-                 alignments_dir=None,
                  ):
 
         """
@@ -65,15 +66,12 @@ class DataHelper:
 
         np.random.seed(42)
         self.dataset = dataset
-        self.dataset = self.dataset.rstrip(".a2m")
         self.alignment_file = alignment_file
         self.focus_seq_name = focus_seq_name
         self.working_dir = working_dir
         self.calc_weights = calc_weights
         self.alphabet_type = alphabet_type
         self.weights_dir = weights_dir
-        self.save_weights = save_weights
-        self.alignments_dir = alignments_dir
 
         # Initalize the elbo of the wt to None
         #   will be useful if eventually doing mutation effect prediction
@@ -269,12 +267,8 @@ class DataHelper:
             self.theta = 0.2
 
         else:
-            if self.alignments_dir is not None:
-                self.alignment_file = os.path.join(self.alignments_dir, self.dataset + ".a2m")
-            else:
-                self.alignment_file = self.working_dir + '/datasets/alignments/' + self.dataset + '.a2m'
+            self.alignment_file = self.working_dir + '/datasets/alignments/' + self.dataset + '.a2m'
             self.theta = 0.2
-        assert os.path.isfile(self.alignment_file), "Alignment file not found: " + self.alignment_file
 
     def one_hot_3D(self, s):
         """ Transform sequence string into one-hot aa vector"""
@@ -389,22 +383,8 @@ class DataHelper:
             X_flat = X.reshape((X.shape[0], X.shape[1] * X.shape[2]))
             N_list, updates = theano.map(lambda x: 1.0 / T.sum(T.dot(X_flat, x) / T.dot(x, x) > 1 - cutoff), X_flat)
             weightfun = theano.function(inputs=[X, cutoff], outputs=[N_list], allow_input_downcast=True)
-            # TODO tmp debugging
-            print("tmp x_train shape: ", self.x_train.shape)
-
+            #
             self.weights = weightfun(self.x_train, self.theta)[0]
-
-            if self.save_weights:
-                print("Saving sequence weights, dataset={} in  dir {}".format(self.dataset, self.weights_dir))
-                if os.path.isdir(self.weights_dir):
-                    dir = self.weights_dir
-                else:
-                    dir = os.path.join(self.working_dir, self.weights_dir)
-                    assert os.path.isdir(dir), "Could not find weights directory: {} given, expanded to {} using working_dir".format(self.weights_dir, dir)
-                # e.g. BLAT_ECOLX_theta_0.2.npy
-                filename_out = os.path.join(dir, "{}_theta_{}.npy".format(self.dataset, self.theta))
-                print("Saving weights to {}".format(filename_out))
-                np.save(filename_out, self.weights)
 
         else:
             if ':' in self.focus_seq_name:
@@ -729,9 +709,6 @@ class DataHelper:
         print("Generating valid mutations")
         print("focus_seq", self.focus_seq_name, ":", self.focus_seq)
         print("focus_seq_trimmed ", self.focus_seq_trimmed)
-
-        assert model.seq_len == len(self.focus_cols)
-
         for i, letter in enumerate(tqdm(self.focus_seq)):
             if not tqdm_available and i % 10 == 0:
                 print(i)
@@ -838,10 +815,10 @@ class DataHelper:
                 mutant_sequences_one_hot[i, j, k] = 1.0
 
         prediction_matrix = np.zeros((mutant_sequences_one_hot.shape[0], N_pred_iterations))
+
         batch_order = np.arange(mutant_sequences_one_hot.shape[0])
 
         print("Getting ELBOs over ", N_pred_iterations, " iterations and ", minibatch_size, " size minibatches")
-        print("Prediction matrix size:", prediction_matrix.shape)
 
         # Why not batch along the iterations direction? if we have < minibatch_size mutants this doesn't help.
         #  Although if iterations is too big, it may not fit in a minibatch.
@@ -1169,7 +1146,7 @@ def DMS_file_cleanup(DMS_data, target_seq, alphabet, start_idx=1, end_idx=None, 
 
     DMS_data[DMS_phenotype_name] = pd.to_numeric(DMS_data[DMS_phenotype_name], errors='coerce')
     DMS_data.dropna(subset=[DMS_phenotype_name], inplace=True)
-
+    
     DMS_data['DMS_score'] = DMS_data[DMS_phenotype_name] * DMS_directionality
     DMS_data = DMS_data[['mutant', 'DMS_score']]
 
@@ -1185,3 +1162,4 @@ def DMS_file_cleanup(DMS_data, target_seq, alphabet, start_idx=1, end_idx=None, 
                           num_fully_valid_non_silent_mutants, num_mutants_with_non_missing_DMS_score,
                           num_distinct_mutants_with_non_missing_DMS_score]
     return DMS_data, quality_checks
+

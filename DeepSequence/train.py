@@ -10,9 +10,9 @@ def train(data,
     verbose=True,
     job_string="",
     embeddings=False,
-    update_offset=0,
     print_neff=True,
-    print_iter=100):
+    print_iter=100,
+    update_offset=0):
 
     """
     Main function to train DeepSequence
@@ -44,6 +44,7 @@ def train(data,
     batch_order = np.arange(data.x_train.shape[0])
 
     seq_sample_probs = data.weights / np.sum(data.weights)
+    assert len(seq_sample_probs) == data.x_train.shape[0], "Length of sequence weights {} does not match number of sequences {}".format(len(seq_sample_probs), data.x_train.shape[0])
 
     update_num = 0
 
