@@ -112,6 +112,7 @@ def main(args):
     print ("Parameters loaded\n\n")
     
     #custom_matr_mutant_name_list, custom_matr_delta_elbos =\
+    # TODO this should probably return the df, and then we can save it outside
     data_helper.custom_mutant_matrix_df(
         input_filename=dms_input,
         model=vae_model,
@@ -149,8 +150,8 @@ def get_dms_mapping(args):
                                 0])  # msa_path is expected to be the path to the directory where MSAs are located.
     assert os.path.isfile(msa_path), "MSA file not found: " + msa_path
     print("MSA file: " + msa_path)
-    target_seq_start_index = mapping_protein_seq_DMS["start_idx"][mapping_protein_seq_DMS["DMS_id"] == DMS_id].values[
-        0] if "start_idx" in mapping_protein_seq_DMS.columns else 1
+    target_seq_start_index = mapping_protein_seq_DMS["start_idx"][mapping_protein_seq_DMS["DMS_id"] == DMS_id].values[0] \
+        if "start_idx" in mapping_protein_seq_DMS.columns else 1
     target_seq_end_index = target_seq_start_index + len(sequence)
     # msa_start_index = mapping_protein_seq_DMS["MSA_start"][mapping_protein_seq_DMS["DMS_id"]==DMS_id].values[0] if "MSA_start" in mapping_protein_seq_DMS.columns else 1
     # msa_end_index = mapping_protein_seq_DMS["MSA_end"][mapping_protein_seq_DMS["DMS_id"]==DMS_id].values[0] if "MSA_end" in mapping_protein_seq_DMS.columns else len(args.sequence)
