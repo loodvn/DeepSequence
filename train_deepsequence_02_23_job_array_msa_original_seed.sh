@@ -15,8 +15,8 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%a-%x.out
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%a-%x.err   # Optional: Redirect STDERR to its own file
-##SBATCH --array=0-70%10  		# Job arrays (e.g. 1-100 with a maximum of 5 jobs at once)  # 70 datasets * 5 = 349 (indexing from 0)
-#SBATCH --array=0-4			      # Resubmitting / testing only first job
+#SBATCH --array=0-199%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
+##SBATCH --array=0-4			      # Resubmitting / testing only first job
 
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
 
