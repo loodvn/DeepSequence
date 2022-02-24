@@ -8,12 +8,12 @@ import theano
 import theano.tensor as T
 
 tqdm_available = False  # True # tqdm is too spammy in the logs and I don't want to figure it out
-try:
-    from tqdm import tqdm
-except ImportError:
+# try:
+#     from tqdm import tqdm
+# except ImportError:
+#     tqdm_available = False
+if not tqdm_available:
     tqdm = lambda x: x  # noop
-    tqdm_available = False
-
 
 
 class DataHelper:
@@ -689,7 +689,7 @@ class DataHelper:
 
     def custom_mutant_matrix_df(self, input_filename, model, mutant_col, effect_col, N_pred_iterations=2000, \
                                 minibatch_size=2000, output_filename_prefix="", silent_allowed=False,
-                                lowercase_allowed=False):
+                                lowercase_allowed=False, random_seed=None):
 
         """ Predict the delta elbo for a custom mutation filename, using pandas dataframes.
         """
@@ -873,6 +873,8 @@ class DataHelper:
 
         print("Saving to file")
         output_filename = output_filename_prefix + "_samples-" + str(N_pred_iterations) + "_elbo_predictions.csv"
+        if random_seed is not None:
+            output_filename = output_filename_prefix + "_samples-" + str(N_pred_iterations) + "_seed-" + str(random_seed) + "_elbo_predictions.csv"
         df.to_csv(output_filename, index=False)
 
         print("Written to file", output_filename)
