@@ -18,7 +18,11 @@
 #SBATCH --array=0-199%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
 ##SBATCH --array=0-4			      # Resubmitting / testing only first job
 
+################################################################################
+
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
+
+# Note: Remember to clear ~/.theano cache before running this script
 
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"

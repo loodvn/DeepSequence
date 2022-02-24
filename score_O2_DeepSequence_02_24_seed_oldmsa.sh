@@ -5,7 +5,7 @@
 #SBATCH -t 0-5:59                      # Runtime in D-HH:MM format
 #SBATCH -p gpu_quad               	# Partition to run in / gpu_marks/gpu_requeue
 #SBATCH --gres=gpu:teslaV100s:1		# If on gpu_quad, use teslaV100s, if on gpu_requeue, use teslaM40 or a100?
-#SBATCH --mem=30G         		# Memory total in MB (for all cores)
+#SBATCH --mem=10G         		# Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
@@ -19,8 +19,14 @@
 #SBATCH --array=50               # Resubmitting failed jobs
 # TODO debugging: only launch jobs after debug jobs have passed (e.g. job 0)
 
-hostname
-pwd
+################################################################################
+
+set -e # fail fully on first line failure (from Joost slurm_for_ml)
+
+# Note: Remember to clear ~/.theano cache before running this script
+
+echo "hostname: $(hostname)"
+echo "Running from: $(pwd)"
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True,traceback.limit=20, exception_verbosity=high' # Otherwise will only raise a warning and carry on with CPU
 
