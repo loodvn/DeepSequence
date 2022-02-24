@@ -24,10 +24,6 @@ pwd
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True,traceback.limit=20, exception_verbosity=high' # Otherwise will only raise a warning and carry on with CPU
 
-# lines=(`cat "datasets.txt"`)
-# dataset_name=${lines[$SLURM_ARRAY_TASK_ID]}
-# echo $dataset_name
-
 export dms_mapping=/home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220109.csv
 export dms_input_folder=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/DMS/DMS_Benchmarking_Dataset_20220109
 export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer

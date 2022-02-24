@@ -50,8 +50,9 @@ def create_parser():
     parser.add_argument("--dms_index", type=int, required=True)
     parser.add_argument("--model_checkpoint", type=str, required=True)
     parser.add_argument("--dms_mapping", type=str, required=True)
-    parser.add_argument("--weights_dir", type=str)
+    parser.add_argument("--weights_dir", type=str, required=True)
     parser.add_argument("--seed", type=int)
+    parser.add_argument("--msa_use_uniprot", action="store_true")
     return parser
 
 
@@ -66,8 +67,8 @@ def main(args):
     if args.weights_dir is not None:
         assert os.path.isdir(args.weights_dir), "Weights directory specified but does not exist:"+args.weights_dir
 
-    if seed is not None:
-        print("Using seed:", seed)
+    if args.seed is not None:
+        print("Using seed:", args.seed)
 
     DMS_phenotype_name, dms_input, dms_output, msa_path, mutant_col, sequence = get_dms_mapping(args)
 
@@ -75,13 +76,10 @@ def main(args):
                                     working_dir='.',
                                     calc_weights=False,
                                     alphabet_type=args.alphabet_type,
-                                    weights_dir=data_params["weights_dir"],
+                                    # Don't need weights, just using the DataHelper to get the focus_seq_trimmed
                                     )
     assert sequence != data_helper.focus_seq_trimmed, "Sequence in DMS file does not match sequence in MSA file"
 
-    print("Using MSA path as model prefix: "+msa_path)
-    # TODO rather read in params from file
-    # inference for each model
     # TODO this may be unnecessary since we override the seed below anyway
     if args.seed is not None:
         model_params['r_seed'] = args.seed
@@ -105,9 +103,11 @@ def main(args):
         random_seed                    =   model_params["r_seed"],
     )
 
-    print ("Model built")
+    print ("Model skeleton built")
+    # TODO also use uniprot here?
+    print("Using MSA path as model prefix: " + msa_path)
     dataset_name = msa_path.split('.a2m')[0].split('/')[-1]
-    vae_model.load_parameters(file_prefix="dataset-"+str(dataset_name), seed=args.seed)
+    vae_model.load_parameters(file_prefix="dataset-"+str(dataset_name), seed=args.seed) # TODO not using model_params["r_seed"] here
 
     print ("Parameters loaded\n\n")
     
@@ -121,6 +121,7 @@ def main(args):
         N_pred_iterations=args.samples,
         output_filename_prefix=dms_output,
         silent_allowed=True,
+        random_seed=args.seed,
     )
 
     # df.to_csv(args.dms_output)
@@ -148,8 +149,21 @@ def get_dms_mapping(args):
     msa_path = os.path.join(args.msa_path,
                             mapping_protein_seq_DMS["MSA_filename"][mapping_protein_seq_DMS["DMS_id"] == DMS_id].values[
                                 0])  # msa_path is expected to be the path to the directory where MSAs are located.
-    assert os.path.isfile(msa_path), "MSA file not found: " + msa_path
+
+    # Rather use UniProt ID as MSA prefix
+    if args.msa_use_uniprot:
+        if not os.path.isfile(msa_path):
+            print("MSA file not found: " + msa_path)
+            print("Looking for close match using UniProt ID")
+            uniprot_id = mapping_protein_seq_DMS["UniProt_ID"][mapping_protein_seq_DMS["DMS_id"] == DMS_id].values[0]
+            print("UniProt ID: " + uniprot_id)
+            found = [file for file in os.listdir(args.msa_path) if file.startswith(uniprot_id) and file.endswith(".a2m")]
+            assert len(found) == 1, "Could not find unique MSA file for Uniprot ID {} in {}, found {} files".format(uniprot_id, args.msa_path, found)
+            msa_path = os.path.join(args.msa_path, found[0])
+            print("New MSA file: " + msa_path)
+
     print("MSA file: " + msa_path)
+    assert os.path.isfile(msa_path), "MSA file not found: " + msa_path
     target_seq_start_index = mapping_protein_seq_DMS["start_idx"][mapping_protein_seq_DMS["DMS_id"] == DMS_id].values[0] \
         if "start_idx" in mapping_protein_seq_DMS.columns else 1
     target_seq_end_index = target_seq_start_index + len(sequence)
