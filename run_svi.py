@@ -21,6 +21,8 @@ parser.add_argument("--alignments_dir", type=str, help="Location of alignments")
 parser.add_argument("--seed", type=int, help="Random seed override (for model ensembling).")
 args = parser.parse_args()
 
+args.dataset = args.dataset.rstrip(".a2m")
+
 data_params = {
     "dataset"       :   args.dataset,
     "weights_dir"	:   args.weights_dir,
@@ -57,6 +59,7 @@ if args.n_latent_override:
     model_params['n_latent'] = args.n_latent_override
 
 if __name__ == "__main__":
+    start_time = time.time()
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
                                     working_dir='.',
                                     calc_weights=False,  # Use precomputed weights
@@ -64,6 +67,7 @@ if __name__ == "__main__":
 				                    weights_dir=data_params["weights_dir"],
                                     alignments_dir=args.alignments_dir,
     )
+    print("Data loaded.")
     if args.neff_override:
         data_helper.Neff = args.neff_override
     
@@ -88,6 +92,7 @@ if __name__ == "__main__":
         n_patterns                     =   model_params["n_pat"],
         random_seed                    =   model_params["r_seed"],
         )
+    print("Model loaded")
 
     job_string = helper.gen_job_string(data_params, model_params)
     if args.neff_override:
@@ -97,11 +102,16 @@ if __name__ == "__main__":
 
     print ("job string: ", job_string)
 
+    print("Starting training")
+
     train.train(data_helper, vae_model,
         num_updates             =   train_params["num_updates"],
         save_progress           =   train_params["save_progress"],
         save_parameters         =   train_params["save_parameters"],
         verbose                 =   train_params["verbose"],
         job_string              =   job_string)
+    print("Training complete")
 
     vae_model.save_parameters(file_prefix=job_string)
+
+    print("Done in " + str(time.time() - start_time) + " seconds")
