@@ -397,12 +397,12 @@ class DataHelper:
             if self.save_weights:
                 print("Saving sequence weights, dataset={} in  dir {}".format(self.dataset, self.weights_dir))
                 if os.path.isdir(self.weights_dir):
-                    dir = self.weights_dir
+                    weights_dir_found = self.weights_dir
                 else:
-                    dir = os.path.join(self.working_dir, self.weights_dir)
-                    assert os.path.isdir(dir), "Could not find weights directory: {} given, expanded to {} using working_dir".format(self.weights_dir, dir)
+                    weights_dir_found = os.path.join(self.working_dir, self.weights_dir)
+                    assert os.path.isdir(weights_dir_found), "Could not find weights directory: {} given, expanded to {} using working_dir".format(self.weights_dir, weights_dir_found)
                 # e.g. BLAT_ECOLX_theta_0.2.npy
-                filename_out = os.path.join(dir, "{}_theta_{}.npy".format(self.dataset, self.theta))
+                filename_out = os.path.join(weights_dir_found, "{}_theta_{}.npy".format(self.dataset, self.theta))
                 print("Saving weights to {}".format(filename_out))
                 np.save(filename_out, self.weights)
 
@@ -416,21 +416,22 @@ class DataHelper:
                 print("Loading sequence weights from file, looking for {} in {}".format(self.dataset, self.weights_dir))
 
                 # Get prefix before second underscore
-                dataset_prefix = "_".join(self.dataset.split("_")[:2])
+                # dataset_prefix = "_".join(self.dataset.split("_")[:2])
+                dataset_prefix = self.dataset  # TODO trying without prefix?
                 # Set path
                 if os.path.isdir(self.weights_dir):
-                    dir = self.weights_dir
+                    weights_dir_found = self.weights_dir
                 else:
-                    dir = os.path.join(self.working_dir, self.weights_dir)
-                    assert os.path.isdir(dir), "Could not find weights directory: {} given, expanded to {}".format(
-                        self.weights_dir, dir)
+                    weights_dir_found = os.path.join(self.working_dir, self.weights_dir)
+                assert os.path.isdir(weights_dir_found), "Could not find weights directory: {} given, expanded to {}".format(
+                        self.weights_dir, weights_dir_found)
 
                 # Find weights file using dataset prefix
-                found = [file for file in os.listdir(dir) if file.startswith(dataset_prefix) and file.endswith(".npy")]
-                assert len(
-                    found) == 1, "Could not find unique weights file for dataset {} in {}, found {} files".format(
-                    self.dataset, dir, found)
-                weights_location = os.path.join(dir, found[0])
+                found = [file for file in os.listdir(weights_dir_found) if file.startswith(dataset_prefix) and file.endswith(".npy")]
+                assert len(found) == 1, \
+                    "Could not find unique weights file for dataset {} with prefix {}, in {}, found {} files"\
+                    .format(self.dataset, dataset_prefix, weights_dir_found, found)
+                weights_location = os.path.join(weights_dir_found, found[0])
 
                 self.weights = np.load(file=weights_location)
                 print("Weights loaded from {}".format(weights_location))
