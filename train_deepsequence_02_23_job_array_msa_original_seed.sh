@@ -2,9 +2,14 @@
 #SBATCH -c 2                               # Request two cores
 #SBATCH -N 1                               # Request one node (if you request more than one core with -c, also using
                                            # -N 1 means all cores will be on the same node)
-#SBATCH -t 0-5:59                         # Runtime in D-HH:MM format
-#SBATCH -p gpu_quad                           # Partition to run in
-#SBATCH --gres=gpu:teslaV100s:1		         # If on gpu_quad, use teslaV100s, if on gpu_requeue, use teslaM40 or a100?
+#SBATCH -t 0-11:59                         # Runtime in D-HH:MM format
+#SBATCH -p gpu_quad,gpu #,gpu_requeue        # Partition to run in
+# If on gpu_quad, use teslaV100s
+# If on gpu_requeue, use teslaM40 or a100?
+# If on gpu, any of them are fine (teslaV100, teslaM40, teslaK80)
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=gpu_doublep
+#SBATCH --qos=gpuquad_qos
 #SBATCH --mem=20G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
@@ -12,11 +17,12 @@
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
 #SBATCH --job-name="deepseq_training_original_msa_seeds"
+
 # Job array-specific
-#SBATCH --output=slurm_files/slurm-lvn-%A_%a-%x.out
-##SBATCH --error=slurm_files/slurm-lvn-%A_%a-%x.err   # Optional: Redirect STDERR to its own file
-#SBATCH --array=0-199%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
-##SBATCH --array=0-4			      # Resubmitting / testing only first job
+#SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
+##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
+#SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
+##SBATCH --array=0			      # Resubmitting / testing only first job
 
 ################################################################################
 
@@ -31,8 +37,8 @@ export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise w
 
 # To generate this file from a directory, just do e.g. 'ls -1 /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/*.a2m > msas_original.txt'
 lines=( $(cat "msas_original.txt") ) # Old alignments, in /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
-dataset_id=$(($SLURM_ARRAY_TASK_ID / 5))  # Group all seeds together
-seed_id=$(($SLURM_ARRAY_TASK_ID % 5))
+dataset_id=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
+seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
 seeds=(1 2 3 4 5)  # For some reason Theano won't accept seed 0..
 seed=${seeds[$seed_id]}
 echo "dataset_id: $dataset_id, seed: $seed"
