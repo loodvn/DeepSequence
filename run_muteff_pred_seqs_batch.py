@@ -69,20 +69,18 @@ def main(args):
 
     if args.seed is not None:
         print("Using seed:", args.seed)
+        # TODO this may be unnecessary since we override the seed below anyway
+        model_params['r_seed'] = args.seed
 
     DMS_phenotype_name, dms_input, dms_output, msa_path, mutant_col, sequence = get_dms_mapping(args)
 
+    # Don't need weights, just using the DataHelper to get the focus_seq_trimmed
     data_helper = helper.DataHelper(alignment_file=msa_path,
                                     working_dir='.',
                                     calc_weights=False,
                                     alphabet_type=args.alphabet_type,
-                                    # Don't need weights, just using the DataHelper to get the focus_seq_trimmed
                                     )
     assert sequence != data_helper.focus_seq_trimmed, "Sequence in DMS file does not match sequence in MSA file"
-
-    # TODO this may be unnecessary since we override the seed below anyway
-    if args.seed is not None:
-        model_params['r_seed'] = args.seed
 
     vae_model   = model.VariationalAutoencoder(data_helper,
         batch_size                     =   model_params["bs"],
@@ -103,13 +101,15 @@ def main(args):
         random_seed                    =   model_params["r_seed"],
     )
 
-    print ("Model skeleton built")
+    print("Model skeleton built")
     # TODO also use uniprot here?
     print("Using MSA path as model prefix: " + msa_path)
-    dataset_name = msa_path.split('.a2m')[0].split('/')[-1]
-    vae_model.load_parameters(file_prefix="dataset-"+str(dataset_name), seed=args.seed) # TODO not using model_params["r_seed"] here
+    dataset_name = msa_path.rstrip('.a2m').split('/')[-1]
+    print("Searching for dataset {} in checkpoint dir: {}".format(dataset_name, args.model_checkpoint))
+    # TODO not using model_params["r_seed"] here
+    vae_model.load_parameters(file_prefix="dataset-"+str(dataset_name), seed=args.seed, override_params_dir=args.model_checkpoint)
 
-    print ("Parameters loaded\n\n")
+    print("Parameters loaded\n\n")
     
     #custom_matr_mutant_name_list, custom_matr_delta_elbos =\
     # TODO this should probably return the df, and then we can save it outside

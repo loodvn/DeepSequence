@@ -3,7 +3,7 @@
 #SBATCH -N 1                               # Request one node (if you request more than one core with -c, also using
                                            # -N 1 means all cores will be on the same node)
 #SBATCH -t 0-23:59                         # Runtime in D-HH:MM format
-#SBATCH -p gpu_quad,gpu #,gpu_requeue        # Partition to run in
+#SBATCH -p gpu_quad             #,gpu_marks,gpu #,gpu_requeue        # Partition to run in
 # If on gpu_quad, use teslaV100s
 # If on gpu_requeue, use teslaM40 or a100?
 # If on gpu, any of them are fine (teslaV100, teslaM40, teslaK80) although K80 sometimes is too slow
@@ -24,16 +24,10 @@
 #SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
 #SBATCH --array=2,3,4,7,8,104			      # Resubmitting / testing only first job
 
-# 28 Feb reruns:
-#Failed rerun theano:
-#3
-#+24min limits:
-#0,1,5,6,9,10,11,12,13,14
-#+ Slow / no GPU:
-#101,103,302,411
-#+ cuda OOM:
-#324,403
-#SBATCH --array=3,0,1,5,6,9,10,11,12,13,14,101,103,302,411,324,403
+# 28 Feb reruns 2:
+#OOM:
+#SBATCH --array=3,5,324,403
+#SBATCH --array=3
 
 ################################################################################
 
@@ -43,7 +37,7 @@ set -e # fail fully on first line failure (from Joost slurm_for_ml)
 
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
-echo "GPU available: " $SLURM_STEP_GPUS
+echo "GPU available: $(nvidia-smi)"
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise will only raise a warning and carry on with CPU
 

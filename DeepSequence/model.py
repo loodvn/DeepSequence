@@ -722,9 +722,12 @@ class VariationalAutoencoder:
         cPickle.dump({name: v.get_value() for name, v in self.v.items()}, \
             open(self.working_dir+"/params/"+file_prefix +"_v.pkl", "wb"))
 
-    def load_parameters(self, file_prefix="", seed=None):
+    def load_parameters(self, file_prefix="", seed=None, override_params_dir=None):
         """Load the variables in a shared variable safe way"""
-        params_dir = os.path.join(self.working_dir, 'params')
+        if override_params_dir is not None:
+            params_dir = override_params_dir
+        else:
+            params_dir = os.path.join(self.working_dir, 'params')
         assert os.path.isdir(params_dir), "{} is not a directory".format(params_dir)
         # Check _params.pkl exists, then assume the others exist too
         file_matches = [file for file in os.listdir(params_dir) if file.startswith(file_prefix)
