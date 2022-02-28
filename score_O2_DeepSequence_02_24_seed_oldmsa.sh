@@ -47,7 +47,7 @@ export dms_input_folder=/n/groups/marks/projects/marks_lab_and_oatml/protein_tra
 export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_02_28_msa_original/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
 #export msa_path=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/tkmer_20220109
 export msa_path=/n/groups/marks/users/lood/DeepSequence_runs/pascal_deepseq_alignments_dir  # Original DeepSequence MSA: /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
-export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params_02_28_msa_original/
+export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params/  # TODO use params_02_28_msa_original
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
