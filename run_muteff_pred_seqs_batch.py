@@ -50,7 +50,7 @@ def create_parser():
     parser.add_argument("--dms_index", type=int, required=True)
     parser.add_argument("--model_checkpoint", type=str, required=True)
     parser.add_argument("--dms_mapping", type=str, required=True)
-    parser.add_argument("--weights_dir", type=str, required=True)
+    # parser.add_argument("--weights_dir", type=str, required=True)  # Don't need weights dir for the scoring?
     parser.add_argument("--seed", type=int)
     parser.add_argument("--msa_use_uniprot", action="store_true")
     return parser

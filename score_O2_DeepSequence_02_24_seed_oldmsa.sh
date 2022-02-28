@@ -3,7 +3,7 @@
 #SBATCH -N 1                           	# Request one node (if you request more than one core with -c, also using
                                        	# -N 1 means all cores will be on the same node)
 #SBATCH -t 0-5:59                      # Runtime in D-HH:MM format
-#SBATCH -p gpu_quad,gpu #,gpu_requeue        # Partition to run in
+#SBATCH -p gpu_quad,gpu_marks,gpu #,gpu_requeue        # Partition to run in
 # If on gpu_quad, use teslaV100s
 # If on gpu_requeue, use teslaM40 or a100?
 # If on gpu, any of them are fine (teslaV100, teslaM40, teslaK80) although K80 sometimes is too slow
@@ -12,18 +12,16 @@
 #SBATCH --qos=gpuquad_qos
 #SBATCH --mem=10G                          # Memory total in MB (for all cores)
 
-
-
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
-##SBATCH --job-name="ds_dms_oldmsa"
-#SBATCH --job-name="tmp_ds_dms_oldmsa"
+#SBATCH --job-name="ds_dms_oldmsa"
 # Job array-specific
-#SBATCH --output=slurm_files/slurm-lvn-%A_%a-%x.out
-#SBATCH --array=0-81,100-181,200-281,300-381,400-481%10          		# I think there are 82 DMS files
-#SBATCH --array=0,1,100,101                   # Just checking a few examples
+#SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
+# TODO skipping DMS datasets 0-9 as I'm not sure where the corresponding MSAs are..
+#SBATCH --array=10-81,110-181,210-281,310-381,410-481%10          		# I think there are 82 DMS files
+##SBATCH --array=112                   # Just checking a few examples
 
 ################################################################################
 
@@ -45,11 +43,11 @@ echo "DATASET_ID: $DATASET_ID, SEED: $SEED"
 
 export dms_mapping=/n/groups/marks/users/lood/DeepSequence_runs/DMS_mapping_20220109.csv  # From /home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220109.csv
 export dms_input_folder=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/DMS/DMS_Benchmarking_Dataset_20220109
-export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_tmp_seed/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
+# Remember to create this folder before run:
+export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_02_28_msa_original/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
 #export msa_path=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/tkmer_20220109
 export msa_path=/n/groups/marks/users/lood/DeepSequence_runs/pascal_deepseq_alignments_dir  # Original DeepSequence MSA: /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
 export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params_02_28_msa_original/
-export weights_dir=/n/groups/marks/users/lood/DeepSequence_runs/weights_2020_02_15/
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
@@ -61,7 +59,6 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --dms_output_dir $dms_output_folder \
   --msa_path $msa_path \
   --model_checkpoint $model_checkpoint_dir \
-  --weights_dir $weights_dir \
   --dms_index $DATASET_ID \
   --samples 2000 \
   --seed "$SEED" \
