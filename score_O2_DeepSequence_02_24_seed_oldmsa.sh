@@ -24,6 +24,12 @@
 ##SBATCH --array=112                   # Just checking a few examples
 #SBATCH --hold  # Holds job so that we can first check the first few
 
+# Quite neat workflow:
+# Submit job array in held state, then release first job to test
+# Add a dependency so that the next jobs are submitted as soon as the first job completes successfully:
+# scontrol update Dependency=afterok:<jobid>_0 JobId=<jobid>
+# Release all the other jobs; they'll be stuck until the first job is done
+
 ################################################################################
 
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
