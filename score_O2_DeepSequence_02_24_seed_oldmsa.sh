@@ -19,15 +19,16 @@
 #SBATCH --job-name="ds_dms_oldmsa"
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
-# TODO skipping DMS datasets 0-9 as I'm not sure where the corresponding MSAs are..
-#SBATCH --array=10-81,110-181,210-281,310-381,410-481%10          		# I think there are 82 DMS files
+# TODO don't know where MSAs are for new indices: [0, 1, 11, 20, 24, 25, 33] (full benchmark indices: [ 1  3 29 51 57 58 75])
+#SBATCH --array=0-37,100-137,200-237,300-337,400-437%1          		# 37 rows in DeepSeq subset, 81 DMSs in total benchmark
 ##SBATCH --array=112                   # Just checking a few examples
+#SBATCH --hold  # Holds job so that we can first check the first few
 
 ################################################################################
 
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
 
-# Note: Remember to clear ~/.theano cache before running this script
+# Note: Remember to clear ~/.theano cache before running this script, otherwise jobs eventually start crashing while compiling theano
 
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
@@ -41,13 +42,14 @@ seeds=(1 2 3 4 5)  # For some reason Theano won't accept SEED 0..
 SEED=${seeds[$SEED_ID]}
 echo "DATASET_ID: $DATASET_ID, SEED: $SEED"
 
-export dms_mapping=/n/groups/marks/users/lood/DeepSequence_runs/DMS_mapping_20220109.csv  # From /home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220109.csv
+# Note: using modified DeepSeq mapping file.
+export dms_mapping=/n/groups/marks/users/lood/DeepSequence_runs/DMS_mapping_deepseq_20220109.csv  # From /home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220109.csv
 export dms_input_folder=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/DMS/DMS_Benchmarking_Dataset_20220109
 # Remember to create this folder before run:
 export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_02_28_msa_original/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
 #export msa_path=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/tkmer_20220109
 export msa_path=/n/groups/marks/users/lood/DeepSequence_runs/pascal_deepseq_alignments_dir  # Original DeepSequence MSA: /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
-export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params/  # TODO use params_02_28_msa_original
+export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params_02_28_msa_original/  # TODO rsync to keep the params_02_28_msa_original folder up to date
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
