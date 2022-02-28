@@ -64,8 +64,6 @@ def main(args):
     assert os.path.isfile(args.dms_mapping), "Mapping file does not exist:"+args.dms_mapping
     assert os.path.isdir(args.dms_input_dir), "DMS input directory does not exist:"+args.dms_input_dir
     assert os.path.isdir(args.dms_output_dir), "DMS output directory does not exist:"+args.dms_output_dir
-    if args.weights_dir is not None:
-        assert os.path.isdir(args.weights_dir), "Weights directory specified but does not exist:"+args.weights_dir
 
     if args.seed is not None:
         print("Using seed:", args.seed)
