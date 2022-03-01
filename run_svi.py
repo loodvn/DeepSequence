@@ -70,9 +70,6 @@ if __name__ == "__main__":
     print("Data loaded.")
     if args.neff_override:
         data_helper.Neff = args.neff_override
-    
-    # write out what theta was used
-    data_params['theta'] = data_helper.theta
 
     vae_model   = model.VariationalAutoencoder(data_helper,
         batch_size                     =   model_params["bs"],

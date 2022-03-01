@@ -16,12 +16,12 @@
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
-#SBATCH --job-name="deepseq_training_msa_v5_seeds"
+#SBATCH --job-name="tmp"  # deepseq_training_msa_v5_seeds
 
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out   # Nice tip: using %3a to pad to 3 characters (23 -> 023)
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
-#SBATCH --array=0-73,100-173,200-273,300-373,400-473%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 74 MSAs in msa_tkmer_20220227
+#SBATCH --array=0-71,100-171,200-271,300-371,400-471%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 72 MSAs in msa_tkmer_20220227 (removed 2 extra BRCA1)
 #SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
 #SBATCH --hold  # Holds job so that we can first manually check a few
 
@@ -43,6 +43,7 @@ module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise will only raise a warning and carry on with CPU
 
 # To generate this file from a directory, just do e.g. '(cd ALIGNMENTS_DIR && ls -1 *.a2m) > datasets.txt'
+# Note: Deleted non-"full" BRCA1 alignments from copied folder
 lines=( $(cat "msa_v5.txt") ) # v5 benchmark
 DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
 seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
@@ -53,7 +54,7 @@ echo "DATASET_ID: $DATASET_ID, seed: $SEED"
 dataset_name=${lines[$DATASET_ID]}
 echo "dataset name: $dataset_name"
 
-# TODO this is not completely up to date - 7/74 weight files missing: 17,23,28,29,41,52,63
+# TODO this is not completely up to date - 7/74 weight files missing: 15,22,26,27,39,50,61
 #CAPSD_AAV2S_uniprot_t099_msc70_mcc70_b0.8.a2m
 #ENV_HV1B9_S364P-M373R_b0.3.a2m
 #GCN4_YEAST_full_24-02-2022_b01.a2m
@@ -61,6 +62,7 @@ echo "dataset name: $dataset_name"
 #NRAM_I33A0_full_11-26-2021_b01.a2m
 #R1AB_SARS2_02-19-2022_b07.a2m
 #TADBP_HUMAN_full_11-26-2021_b09.a2m
+# Note also that there are some extra weights files: CAS9_STRP1_theta_0.2.npy, LAMB_ECOLI_theta_0.2.npy
 export WEIGHTS_DIR=weights_msa_tkmer_20220227
 export ALIGNMENTS_DIR=msa_tkmer_20220227
 
