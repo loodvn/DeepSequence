@@ -413,8 +413,8 @@ class DataHelper:
                 print("Loading sequence weights from file, looking for {} in {}".format(self.dataset, self.weights_dir))
 
                 # Get prefix before second underscore
-                # dataset_prefix = "_".join(self.dataset.split("_")[:2])
-                dataset_prefix = self.dataset  # TODO trying without prefix?
+                # TODO Note: This fails for some of the MSA,weight pairs in the original DeepSeq dataset
+                dataset_prefix = "_".join(self.dataset.split("_")[:2])
                 # Set path
                 if os.path.isdir(self.weights_dir):
                     weights_dir_found = self.weights_dir

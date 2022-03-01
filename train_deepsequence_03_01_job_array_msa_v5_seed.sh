@@ -3,7 +3,7 @@
 #SBATCH -N 1                               # Request one node (if you request more than one core with -c, also using
                                            # -N 1 means all cores will be on the same node)
 #SBATCH -t 0-23:59                         # Runtime in D-HH:MM format
-#SBATCH -p gpu_quad             #,gpu_marks,gpu #,gpu_requeue        # Partition to run in
+#SBATCH -p gpu_quad,gpu_marks,gpu          #,gpu_requeue        # Partition to run in
 # If on gpu_quad, use teslaV100s
 # If on gpu_requeue, use teslaM40 or a100?
 # If on gpu, any of them are fine (teslaV100, teslaM40, teslaK80) although K80 sometimes is too slow
@@ -21,7 +21,7 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out   # Nice tip: using %3a to pad to 3 characters (23 -> 023)
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
-#SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # TODO MSAs
+#SBATCH --array=0-73,100-173,200-273,300-373,400-473%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 74 MSAs in msa_tkmer_20220227
 #SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
 #SBATCH --hold  # Holds job so that we can first manually check a few
 
@@ -53,6 +53,14 @@ echo "DATASET_ID: $DATASET_ID, seed: $SEED"
 dataset_name=${lines[$DATASET_ID]}
 echo "dataset name: $dataset_name"
 
+# TODO this is not completely up to date - 7/74 weight files missing: 17,23,28,29,41,52,63
+#CAPSD_AAV2S_uniprot_t099_msc70_mcc70_b0.8.a2m
+#ENV_HV1B9_S364P-M373R_b0.3.a2m
+#GCN4_YEAST_full_24-02-2022_b01.a2m
+#GFP_AEQVI_b0.8.a2m
+#NRAM_I33A0_full_11-26-2021_b01.a2m
+#R1AB_SARS2_02-19-2022_b07.a2m
+#TADBP_HUMAN_full_11-26-2021_b09.a2m
 export WEIGHTS_DIR=weights_msa_tkmer_20220227
 export ALIGNMENTS_DIR=msa_tkmer_20220227
 
