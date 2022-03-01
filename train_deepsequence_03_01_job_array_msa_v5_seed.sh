@@ -16,7 +16,7 @@
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
-#SBATCH --job-name="tmp"  # deepseq_training_msa_v5_seeds
+#SBATCH --job-name="deepseq_training_msa_v5_seeds"
 
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out   # Nice tip: using %3a to pad to 3 characters (23 -> 023)
