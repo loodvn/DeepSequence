@@ -79,9 +79,6 @@ class DataHelper:
         #   will be useful if eventually doing mutation effect prediction
         self.wt_elbo = None
 
-        # Alignment processing parameters
-        self.theta = theta if theta is not None else 0.2
-
         # If I am running tests with the model, I don't need all the
         #    sequences loaded
         self.load_all_sequences = load_all_sequences
@@ -89,6 +86,7 @@ class DataHelper:
         # Load necessary information for preloaded datasets
         if self.dataset != "":
             self.configure_datasets()
+        # Note: Script will fail if calc_weights is True and theta is not set
         if theta is not None:
             self.theta = theta
 
@@ -273,7 +271,6 @@ class DataHelper:
                 self.alignment_file = os.path.join(self.alignments_dir, self.dataset + ".a2m")
             else:
                 self.alignment_file = self.working_dir + '/datasets/alignments/' + self.dataset + '.a2m'
-            self.theta = 0.2
         assert os.path.isfile(self.alignment_file), "Alignment file not found: " + self.alignment_file
 
     def one_hot_3D(self, s):
