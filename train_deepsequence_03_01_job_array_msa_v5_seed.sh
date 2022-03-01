@@ -10,24 +10,19 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=40G                          # Memory total in MB (for all cores)
+#SBATCH --mem=20G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
-#SBATCH --job-name="deepseq_training_original_msa_seeds"
+#SBATCH --job-name="deepseq_training_msa_v5_seeds"
 
 # Job array-specific
-#SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
+#SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out   # Nice tip: using %3a to pad to 3 characters (23 -> 023)
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
-#SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # original DeepSeq MSA: 40 datasets * 5 = 199 (indexing from 0)
-#SBATCH --array=2,3,4,7,8,104			      # Resubmitting / testing only first job
-
-# 28 Feb reruns 2:
-#OOM:
-#SBATCH --array=3,5,324,403
-#SBATCH --array=3
+#SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # TODO MSAs
+#SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
 
 ################################################################################
 
@@ -41,19 +36,19 @@ echo "GPU available: $(nvidia-smi)"
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise will only raise a warning and carry on with CPU
 
-# To generate this file from a directory, just do e.g. 'ls -1 /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/*.a2m > msas_original.txt'
-lines=( $(cat "msas_original.txt") ) # Old alignments, in /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
-dataset_id=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
+# To generate this file from a directory, just do e.g. 'ls -1 ALIGNMENTS_DIR/*.a2m > datasets.txt'
+lines=( $(cat "msa_v5.txt") ) # v5 benchmark
+DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
 seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
 seeds=(1 2 3 4 5)  # For some reason Theano won't accept seed 0..
-seed=${seeds[$seed_id]}
-echo "dataset_id: $dataset_id, seed: $seed"
+SEED=${seeds[$seed_id]}
+echo "DATASET_ID: $DATASET_ID, seed: $SEED"
 
-dataset_name=${lines[$dataset_id]}
+dataset_name=${lines[$DATASET_ID]}
 echo "dataset name: $dataset_name"
 
 export WEIGHTS_DIR=weights_2020_02_15
-export ALIGNMENTS_DIR=pascal_deepseq_alignments_dir
+export ALIGNMENTS_DIR=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/tkmer_20220227/
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
@@ -63,5 +58,9 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --dataset $dataset_name \
   --weights_dir $WEIGHTS_DIR \
   --alignments_dir $ALIGNMENTS_DIR \
-  --seed "$seed"  # grouping seeds together, e.g. job array 15-19 is dataset id 3, seeds 0-4 (indexing from 0)
+  --seed $SEED
 #  --theta-override 0.9
+
+# Note: Reusing Pascal's MSA_weights, could also recompute them
+# Also Note: Need to save this in a separate place than ./params
+#   - Perhaps it is better after all to create different "working directories"?
