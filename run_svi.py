@@ -21,7 +21,7 @@ parser.add_argument("--alignments_dir", type=str, help="Location of alignments")
 parser.add_argument("--seed", type=int, help="Random seed override (for model ensembling).")
 args = parser.parse_args()
 
-args.dataset = args.dataset.rstrip(".a2m")
+args.dataset = args.dataset.split(".a2m")[0]
 
 data_params = {
     "dataset"       :   args.dataset,

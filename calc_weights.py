@@ -18,7 +18,7 @@ parser.add_argument("--weights_dir_out", type=str, default="", help="Location to
 args = parser.parse_args()
 
 # DataHelper expects the dataset name without extension
-args.dataset = args.dataset.rstrip(".a2m")
+args.dataset = args.dataset.split(".a2m")[0]
 assert not args.dataset.endswith(".a2m")
 
 data_params = {

@@ -102,7 +102,7 @@ def main(args):
     print("Model skeleton built")
     # TODO also use uniprot here?
     print("Using MSA path as model prefix: " + msa_path)
-    dataset_name = msa_path.rstrip('.a2m').split('/')[-1]
+    dataset_name = msa_path.split('.a2m')[0].split('/')[-1]
     print("Searching for dataset {} in checkpoint dir: {}".format(dataset_name, args.model_checkpoint))
     # TODO not using model_params["r_seed"] here
     vae_model.load_parameters(file_prefix="dataset-"+str(dataset_name), seed=args.seed, override_params_dir=args.model_checkpoint)

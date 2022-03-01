@@ -65,7 +65,7 @@ class DataHelper:
 
         np.random.seed(42)
         self.dataset = dataset
-        self.dataset = self.dataset.rstrip(".a2m")
+        self.dataset = self.dataset.split(".a2m")[0]
         self.alignment_file = alignment_file
         self.focus_seq_name = focus_seq_name
         self.working_dir = working_dir
