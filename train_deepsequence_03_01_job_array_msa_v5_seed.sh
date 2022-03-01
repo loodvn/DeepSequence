@@ -23,7 +23,13 @@
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
 #SBATCH --array=0-39,100-139,200-239,300-339,400-439%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # TODO MSAs
 #SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
+#SBATCH --hold  # Holds job so that we can first manually check a few
 
+# Quite neat workflow:
+# Submit job array in held state, then release first job to test
+# Add a dependency so that the next jobs are submitted as soon as the first job completes successfully:
+# scontrol update Dependency=afterok:<jobid>_0 JobId=<jobid>
+# Release all the other jobs; they'll be stuck until the first job is done
 ################################################################################
 
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
@@ -36,7 +42,7 @@ echo "GPU available: $(nvidia-smi)"
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise will only raise a warning and carry on with CPU
 
-# To generate this file from a directory, just do e.g. 'ls -1 ALIGNMENTS_DIR/*.a2m > datasets.txt'
+# To generate this file from a directory, just do e.g. '(cd ALIGNMENTS_DIR && ls -1 *.a2m) > datasets.txt'
 lines=( $(cat "msa_v5.txt") ) # v5 benchmark
 DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
 seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
@@ -47,8 +53,8 @@ echo "DATASET_ID: $DATASET_ID, seed: $SEED"
 dataset_name=${lines[$DATASET_ID]}
 echo "dataset name: $dataset_name"
 
-export WEIGHTS_DIR=weights_2020_02_15
-export ALIGNMENTS_DIR=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/tkmer_20220227/
+export WEIGHTS_DIR=weights_msa_tkmer_20220227
+export ALIGNMENTS_DIR=msa_tkmer_20220227
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
