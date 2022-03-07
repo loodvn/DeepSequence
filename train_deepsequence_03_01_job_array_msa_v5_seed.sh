@@ -23,7 +23,7 @@
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
 #SBATCH --array=0-71,100-171,200-271,300-371,400-471%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 72 MSAs in msa_tkmer_20220227 (removed 2 extra BRCA1)
 ##SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
-#SBATCH --array=1,15,113,138,141,143,149,154,156,200,210,215,238,241,243,249,265,349,417  # Cancelled jobs
+#SBATCH --array=3,31,65                 # Cancelled jobs
 #SBATCH --hold  # Holds job so that we can first manually check a few
 
 # Quite neat workflow:
