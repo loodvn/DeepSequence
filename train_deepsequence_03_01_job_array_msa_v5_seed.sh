@@ -10,7 +10,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=20G                          # Memory total in MB (for all cores)
+#SBATCH --mem=40G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
@@ -23,8 +23,8 @@
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
 #SBATCH --array=0-71,100-171,200-271,300-371,400-471%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 72 MSAs in msa_tkmer_20220227 (removed 2 extra BRCA1)
 ##SBATCH --array=0,1,100,102			      # Resubmitting / testing only first job
-#SBATCH --array=4,6,21,22,25,30,32,36,48,57,62,69,101,112,121,122,144,145,148,212,218,219,221,222,244,245,248,318,322,348,401,412,448  # Failed jobs
-#SBATCH --hold  # Holds job so that we can first manually check a few
+#SBATCH --array=17,321,421    # Out-of-memory resubmissions
+##SBATCH --hold  # Holds job so that we can first manually check a few
 
 # Quite neat workflow:
 # Submit job array in held state, then release first job to test
