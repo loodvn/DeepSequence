@@ -14,12 +14,13 @@
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
+#SBATCH -vv
 
 ##SBATCH -o slurm_files/slurm-%j.out                 # File to which STDOUT + STDERR will be written, including job ID in filename
 #SBATCH --job-name="ds_dms6"
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
-#SBATCH --array=0-86,100-86,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
+#SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
@@ -46,11 +47,11 @@ seeds=(1 2 3 4 5)  # For some reason Theano won't accept SEED 0..
 SEED=${seeds[$SEED_ID]}
 echo "DATASET_ID: $DATASET_ID, SEED: $SEED"
 
-export dms_mapping=DMS_mapping_20220227.csv
-export dms_input_folder=DMS_Benchmarking_Dataset_v5_20220227
+export dms_mapping=/n/groups/marks/users/lood/DeepSequence_runs/DMS_mapping_20220227.csv
+export dms_input_folder=/n/groups/marks/users/lood/DeepSequence_runs/DMS_Benchmarking_Dataset_v5_20220227
 # Remember to create this folder before run:
 export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_03_09/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
-export msa_path=msa_tkmer_20220227
+export msa_path=/n/groups/marks/users/lood/DeepSequence_runs/msa_tkmer_20220227
 export model_checkpoint_dir=/n/groups/marks/users/lood/DeepSequence_runs/params_03_09/
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
@@ -64,7 +65,8 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --msa_path $msa_path \
   --model_checkpoint $model_checkpoint_dir \
   --dms_index $SLURM_ARRAY_TASK_ID \
-  --samples 2000
+  --samples 2000 \
+  --seed "$SEED"
 #  --theta-override 0.9
 
 
