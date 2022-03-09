@@ -10,7 +10,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=40G                          # Memory total in MB (for all cores)
+#SBATCH --mem=20G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
@@ -21,9 +21,8 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out   # Nice tip: using %3a to pad to 3 characters (23 -> 023)
 ##SBATCH --error=slurm_files/slurm-lvn-%A_%3a-%x.err   # Optional: Redirect STDERR to its own file
-#SBATCH --array=0-71,100-171,200-271,300-371,400-471%10  		  # Job arrays, range inclusive (MIN-MAX%MAX_CONCURRENT_TASKS)  # 72 MSAs in msa_tkmer_20220227 (removed 2 extra BRCA1)
-#SBATCH --array=21,30,121,221,417    # Resubmissions v2
-##SBATCH --hold  # Holds job so that we can first manually check a few
+#SBATCH --array=0-4			      # Resubmitting / testing only first job
+#SBATCH --hold  # Holds job so that we can first manually check a few
 
 # Quite neat workflow:
 # Submit job array in held state, then release first job to test
@@ -44,14 +43,17 @@ export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise w
 
 # To generate this file from a directory, just do e.g. '(cd ALIGNMENTS_DIR && ls -1 *.a2m) > datasets.txt'
 # Note: Deleted non-"full" BRCA1 alignments from copied folder
-lines=( $(cat "msa_v5.txt") ) # v5 benchmark
-DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
-seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
+#lines=( $(cat "msa_v5.txt") ) # v5 benchmark
+#DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
+#seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
+seed_id=$SLURM_ARRAY_TASK_ID
 seeds=(1 2 3 4 5)  # For some reason Theano won't accept seed 0..
 SEED=${seeds[$seed_id]}
-echo "DATASET_ID: $DATASET_ID, seed: $SEED"
+#echo "DATASET_ID: $DATASET_ID, seed: $SEED"
+echo "seed: $SEED"
 
-dataset_name=${lines[$DATASET_ID]}
+#dataset_name=${lines[$DATASET_ID]}
+dataset_name="GCN4_YEAST_theta_0.2"
 echo "dataset name: $dataset_name"
 
 #CAPSD_AAV2S_uniprot_t099_msc70_mcc70_b0.8.a2m
