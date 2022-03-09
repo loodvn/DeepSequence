@@ -53,7 +53,7 @@ SEED=${seeds[$seed_id]}
 echo "seed: $SEED"
 
 #dataset_name=${lines[$DATASET_ID]}
-dataset_name="GCN4_YEAST_theta_0.2"
+dataset_name="GCN4_YEAST_full_24-02-2022_b03.a2m"
 echo "dataset name: $dataset_name"
 
 #CAPSD_AAV2S_uniprot_t099_msc70_mcc70_b0.8.a2m
