@@ -19,8 +19,7 @@
 #SBATCH --job-name="ds_dms6"
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
-#SBATCH --array=0-80,100-80,200-280,300-380,400-480%1          		# 81 DMSs in total benchmark
-##SBATCH --array=112                   # Just checking a few examples
+#SBATCH --array=0-86,100-86,200-286,300-386,400-486%1          		# 87 DMSs in total benchmark
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
@@ -47,8 +46,8 @@ seeds=(1 2 3 4 5)  # For some reason Theano won't accept SEED 0..
 SEED=${seeds[$SEED_ID]}
 echo "DATASET_ID: $DATASET_ID, SEED: $SEED"
 
-export dms_mapping=/home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220109.csv
-export dms_input_folder=/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/DMS/DMS_Benchmarking_Dataset_20220109
+export dms_mapping=/home/pn73/protein_transformer/utils/mapping_files/DMS_mapping_20220227.csv
+export dms_input_folder=DMS_Benchmarking_Dataset_v5_20220227
 # Remember to create this folder before run:
 export dms_output_folder=/n/groups/marks/users/lood/DeepSequence_runs/model_scores_03_09/ #/n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/model_scores/MSA_transformer
 export msa_path=msa_tkmer_20220227
