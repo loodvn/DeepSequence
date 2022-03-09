@@ -10,7 +10,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=10G                          # Memory total in MB (for all cores)
+#SBATCH --mem=30G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
