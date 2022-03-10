@@ -20,7 +20,8 @@
 #SBATCH --job-name="ds_dms6"
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
-#SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
+##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
+#SBATCH --array=100-186,200-286,300-386,400-486%10  # Relaunching jobs with correct dataset ID handling
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
@@ -64,7 +65,7 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --dms_output_dir $dms_output_folder \
   --msa_path $msa_path \
   --model_checkpoint $model_checkpoint_dir \
-  --dms_index $SLURM_ARRAY_TASK_ID \
+  --dms_index $DATASET_ID \
   --samples 2000 \
   --seed "$SEED"
 #  --theta-override 0.9
