@@ -10,7 +10,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=40G                          # Memory total in MB (for all cores)
+#SBATCH --mem=60G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
@@ -21,7 +21,7 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
 ##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
-#SBATCH --array=135,269,335,369,419  # TIMEOUT
+#SBATCH --array=169,469  # OOM
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
