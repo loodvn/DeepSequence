@@ -2,15 +2,15 @@
 #SBATCH -c 2                           	# Request one core
 #SBATCH -N 1                           	# Request one node (if you request more than one core with -c, also using
                                        	# -N 1 means all cores will be on the same node)
-#SBATCH -t 0-5:59                      # Runtime in D-HH:MM format
-#SBATCH -p gpu_quad,gpu_marks,gpu #,gpu_requeue        # Partition to run in
+#SBATCH -t 0-11:59                      # Runtime in D-HH:MM format
+#SBATCH -p gpu_quad #,gpu_marks,gpu #,gpu_requeue        # Partition to run in
 # If on gpu_quad, use teslaV100s
 # If on gpu_requeue, use teslaM40 or a100?
 # If on gpu, any of them are fine (teslaV100, teslaM40, teslaK80) although K80 sometimes is too slow
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=gpu_doublep
 #SBATCH --qos=gpuquad_qos
-#SBATCH --mem=30G                          # Memory total in MB (for all cores)
+#SBATCH --mem=40G                          # Memory total in MB (for all cores)
 
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
@@ -21,7 +21,7 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
 ##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
-#SBATCH --array=100-186,200-286,300-386,400-486%10  # Relaunching jobs with correct dataset ID handling
+#SBATCH --array=116,173,231,235,251,304,306,311,330,331,337,340,359,370,416,417,423,445,446,468,471,475,477  # FAILED
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
