@@ -21,7 +21,7 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
 ##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
-#SBATCH --array=116,173,231,235,251,304,306,311,330,331,337,340,359,370,416,417,423,445,446,468,471,475,477  # FAILED
+#SBATCH --array=135,269,335,369,419  # TIMEOUT
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
