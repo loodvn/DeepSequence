@@ -2,7 +2,7 @@
 #SBATCH -c 2                           	# Request one core
 #SBATCH -N 1                           	# Request one node (if you request more than one core with -c, also using
                                        	# -N 1 means all cores will be on the same node)
-#SBATCH -t 0-11:59                      # Runtime in D-HH:MM format
+#SBATCH -t 0-23:59                      # Runtime in D-HH:MM format
 #SBATCH -p gpu_quad #,gpu_marks,gpu #,gpu_requeue        # Partition to run in
 # If on gpu_quad, use teslaV100s
 # If on gpu_requeue, use teslaM40 or a100?
@@ -21,7 +21,7 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
 ##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
-#SBATCH --array=169,469  # OOM
+#SBATCH --array=235,416,445,135,269,369,169,469  # New timeouts
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
