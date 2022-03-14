@@ -21,7 +21,14 @@
 # Job array-specific
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out
 ##SBATCH --array=0-86,100-186,200-286,300-386,400-486%10          		# 87 DMSs in total benchmark
-#SBATCH --array=235,416,445,135,269,369,169,469  # New timeouts
+#SBATCH --array=69,27,35,36,37  # Stragglers
+# SPG1_STRSG_Olson_2014 (69) and:
+#16     BRCA1_HUMAN_Findlay_2018             4
+#27  ENV_HV1B9_DuenasDecamp_2016             4
+#35    HIS7_YEAST_Pokusaeva_2019             3
+#36       HSP82_YEAST_Flynn_2019             4
+#37      HSP82_YEAST_Mishra_2016             4
+#45         NCAP_I34A1_Doud_2015             4
 #SBATCH --hold  # Holds job so that we can first check the first few
 
 # Quite neat workflow:
