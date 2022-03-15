@@ -65,7 +65,7 @@ class DataHelper:
 
         np.random.seed(42)
         self.dataset = dataset
-        self.dataset = self.dataset.split(".a2m")[0]
+        self.dataset = self.dataset.split(".a2m")[0]  # Remove prefix (if there's no prefix, this will still be ok)
         self.alignment_file = alignment_file
         self.focus_seq_name = focus_seq_name
         self.working_dir = working_dir
@@ -79,6 +79,10 @@ class DataHelper:
         #   will be useful if eventually doing mutation effect prediction
         self.wt_elbo = None
 
+        # Alignment processing parameters
+        # Note: Script will fail if calc_weights is True and theta is not set
+        if theta is not None:
+            self.theta = theta
         # If I am running tests with the model, I don't need all the
         #    sequences loaded
         self.load_all_sequences = load_all_sequences
@@ -86,9 +90,6 @@ class DataHelper:
         # Load necessary information for preloaded datasets
         if self.dataset != "":
             self.configure_datasets()
-        # Note: Script will fail if calc_weights is True and theta is not set
-        if theta is not None:
-            self.theta = theta
 
         # Load up the alphabet type to use, whether that be DNA, RNA, or protein
         if self.alphabet_type == "protein":
@@ -386,8 +387,6 @@ class DataHelper:
             X_flat = X.reshape((X.shape[0], X.shape[1] * X.shape[2]))
             N_list, updates = theano.map(lambda x: 1.0 / T.sum(T.dot(X_flat, x) / T.dot(x, x) > 1 - cutoff), X_flat)
             weightfun = theano.function(inputs=[X, cutoff], outputs=[N_list], allow_input_downcast=True)
-            # TODO tmp debugging
-            print("tmp x_train shape: ", self.x_train.shape)
 
             self.weights = weightfun(self.x_train, self.theta)[0]
 
@@ -412,8 +411,9 @@ class DataHelper:
             elif self.weights_dir != "":
                 print("Loading sequence weights from file, looking for {} in {}".format(self.dataset, self.weights_dir))
 
-                # Get prefix before second underscore
-                # TODO Note: This fails for some of the MSA,weight pairs in the original DeepSeq dataset
+                # Get UniProt ID (the prefix before the second underscore)
+                # TODO Note: This fails for some of the MSA,weight pairs in the original DeepSeq dataset,
+                #  since they don't have unique UniProt ids
                 dataset_prefix = "_".join(self.dataset.split("_")[:2])
                 # Set path
                 if os.path.isdir(self.weights_dir):
@@ -562,128 +562,108 @@ class DataHelper:
 
             OUTPUT.close()
 
-    # def custom_mutant_matrix(self, input_filename, model, N_pred_iterations=10, \
-    #         minibatch_size=2000, filename_prefix="", offset=0):
-    #
-    #     """ Predict the delta elbo for a custom mutation filename
-    #     """
-    #     # Get the start and end index from the sequence name
-    #     start_idx, end_idx = self.focus_seq_name.split("/")[-1].split("-")
-    #     start_idx = int(start_idx)
-    #
-    #     wt_pos_focus_idx_tuple_list = []
-    #     focus_seq_index = 0
-    #     focus_seq_list = []
-    #     mutant_to_letter_pos_idx_focus_list = {}
-    #
-    #     # find all possible valid mutations that can be run with this alignment
-    #     print("Generating valid mutations")
-    #     for i,letter in enumerate(tqdm(self.focus_seq)):
-    #         if not tqdm_available and i % 10 == 0:
-    #             print(i)
-    #         if letter == letter.upper():
-    #             for mut in self.alphabet:
-    #                 pos = start_idx+i
-    #                 if letter != mut:
-    #                     mutant = letter+str(pos)+mut
-    #                     mutant_to_letter_pos_idx_focus_list[mutant] = [letter,start_idx+i,focus_seq_index]
-    #             focus_seq_index += 1
-    #
-    #     print("All possible (single?) mutations:", mutant_to_letter_pos_idx_focus_list)
-    #
-    #     self.mutant_sequences = ["".join(self.focus_seq_trimmed)]
-    #     self.mutant_sequences_descriptor = ["wt"]
-    #
-    #     # run through the input file
-    #     if not os.path.isfile(input_filename):
-    #         input_filename = os.path.join(self.working_dir, input_filename)
-    #         assert os.path.isfile(input_filename), "File not found: "+input_filename
-    #
-    #     print("Going through input file:", input_filename)
-    #     INPUT = open(input_filename, "r")
-    #     for i,line in enumerate(tqdm(INPUT)):
-    #         if not tqdm_available and i % 10 == 0:
-    #             print(i)
-    #         line = line.rstrip()
-    #         if i >= 1:
-    #             line_list = line.split(",")
-    #             # generate the list of mutants
-    #             mutant_list = line_list[0].split(":")
-    #             valid_mutant = True
-    #
-    #             # if any of the mutants in this list aren"t in the focus sequence,
-    #             #    I cannot make a prediction
-    #             for mutant in mutant_list:
-    #                 if mutant not in mutant_to_letter_pos_idx_focus_list:
-    #                     valid_mutant = False
-    #
-    #             # If it is a valid mutant, add it to my list to make predictions
-    #             if valid_mutant:
-    #                 focus_seq_copy = list(self.focus_seq_trimmed)[:]
-    #
-    #                 for mutant in mutant_list:
-    #                     wt_aa,pos,idx_focus = mutant_to_letter_pos_idx_focus_list[mutant]
-    #                     mut_aa = mutant[-1]
-    #                     focus_seq_copy[idx_focus] = mut_aa
-    #
-    #                 self.mutant_sequences.append("".join(focus_seq_copy))
-    #                 self.mutant_sequences_descriptor.append(":".join(mutant_list))
-    #
-    #     INPUT.close()
-    #
-    #     print("Making one-hot matrix")
-    #     # Then make the one hot sequence
-    #     self.mutant_sequences_one_hot = np.zeros(\
-    #         (len(self.mutant_sequences),len(self.focus_cols),len(self.alphabet)))
-    #
-    #     for i,sequence in enumerate(tqdm(self.mutant_sequences)):
-    #         if not tqdm_available and i % 10 == 0:
-    #             print(i)
-    #         for j,letter in enumerate(tqdm(sequence)):
-    #             k = self.aa_dict[letter]
-    #             self.mutant_sequences_one_hot[i,j,k] = 1.0
-    #
-    #     self.prediction_matrix = np.zeros((self.mutant_sequences_one_hot.shape[0],N_pred_iterations))
-    #
-    #     batch_order = np.arange(self.mutant_sequences_one_hot.shape[0])
-    #
-    #     print("Getting ELBOs over ", N_pred_iterations, " iterations")
-    #
-    #     for i in tqdm(range(N_pred_iterations)):
-    #         if not tqdm_available and i % 10 == 0:
-    #             print(i)
-    #         np.random.shuffle(batch_order)
-    #
-    #         for j in range(0,self.mutant_sequences_one_hot.shape[0],minibatch_size):
-    #
-    #             batch_index = batch_order[j:j+minibatch_size]
-    #             batch_preds, _, _ = model.all_likelihood_components(self.mutant_sequences_one_hot[batch_index])
-    #
-    #             for k,idx_batch in enumerate(batch_index.tolist()):
-    #                 self.prediction_matrix[idx_batch][i]= batch_preds[k]
-    #
-    #     # Then take the mean of all my elbo samples
-    #     self.mean_elbos = np.mean(self.prediction_matrix, axis=1).flatten().tolist()
-    #
-    #     self.wt_elbo = self.mean_elbos.pop(0)
-    #     self.mutant_sequences_descriptor.pop(0)
-    #
-    #     self.delta_elbos = np.asarray(self.mean_elbos) - self.wt_elbo
-    #
-    #     print("Saving to file")
-    #     if filename_prefix == "":
-    #         return self.mutant_sequences_descriptor, self.delta_elbos
-    #
-    #     else:
-    #         output_filename = filename_prefix+"_samples-"+str(N_pred_iterations)+"_elbo_predictions.csv"
-    #         OUTPUT = open(output_filename, "w")
-    #
-    #         for i,descriptor in enumerate(self.mutant_sequences_descriptor):
-    #             OUTPUT.write(descriptor+";"+str(self.delta_elbos[i])+"\n")
-    #
-    #         OUTPUT.close()
-    #
-    #     print("Written to file", output_filename)
+
+    def custom_mutant_matrix(self, input_filename, model, N_pred_iterations=10, \
+            minibatch_size=2000, filename_prefix="", offset=0):
+
+        """ Predict the delta elbo for a custom mutation filename
+        """
+        # Get the start and end index from the sequence name
+        start_idx, end_idx = self.focus_seq_name.split("/")[-1].split("-")
+        start_idx = int(start_idx)
+
+        wt_pos_focus_idx_tuple_list = []
+        focus_seq_index = 0
+        focus_seq_list = []
+        mutant_to_letter_pos_idx_focus_list = {}
+
+        # find all possible valid mutations that can be run with this alignment
+        for i,letter in enumerate(self.focus_seq):
+            if letter == letter.upper():
+                for mut in self.alphabet:
+                    pos = start_idx+i
+                    if letter != mut:
+                        mutant = letter+str(pos)+mut
+                        mutant_to_letter_pos_idx_focus_list[mutant] = [letter,start_idx+i,focus_seq_index]
+                focus_seq_index += 1
+
+        self.mutant_sequences = ["".join(self.focus_seq_trimmed)]
+        self.mutant_sequences_descriptor = ["wt"]
+
+        # run through the input file
+        INPUT = open(self.working_dir+"/"+input_filename, "r")
+        for i,line in enumerate(INPUT):
+            line = line.rstrip()
+            if i >= 1:
+                line_list = line.split(",")
+                # generate the list of mutants
+                mutant_list = line_list[0].split(":")
+                valid_mutant = True
+
+                # if any of the mutants in this list aren"t in the focus sequence,
+                #    I cannot make a prediction
+                for mutant in mutant_list:
+                    if mutant not in mutant_to_letter_pos_idx_focus_list:
+                        valid_mutant = False
+
+                # If it is a valid mutant, add it to my list to make preditions
+                if valid_mutant:
+                    focus_seq_copy = list(self.focus_seq_trimmed)[:]
+
+                    for mutant in mutant_list:
+                        wt_aa,pos,idx_focus = mutant_to_letter_pos_idx_focus_list[mutant]
+                        mut_aa = mutant[-1]
+                        focus_seq_copy[idx_focus] = mut_aa
+
+                    self.mutant_sequences.append("".join(focus_seq_copy))
+                    self.mutant_sequences_descriptor.append(":".join(mutant_list))
+
+        INPUT.close()
+
+        # Then make the one hot sequence
+        self.mutant_sequences_one_hot = np.zeros(\
+            (len(self.mutant_sequences),len(self.focus_cols),len(self.alphabet)))
+
+        for i,sequence in enumerate(self.mutant_sequences):
+            for j,letter in enumerate(sequence):
+                k = self.aa_dict[letter]
+                self.mutant_sequences_one_hot[i,j,k] = 1.0
+
+        self.prediction_matrix = np.zeros((self.mutant_sequences_one_hot.shape[0],N_pred_iterations))
+
+        batch_order = np.arange(self.mutant_sequences_one_hot.shape[0])
+
+        for i in range(N_pred_iterations):
+            np.random.shuffle(batch_order)
+
+            for j in range(0,self.mutant_sequences_one_hot.shape[0],minibatch_size):
+
+                batch_index = batch_order[j:j+minibatch_size]
+                batch_preds, _, _ = model.all_likelihood_components(self.mutant_sequences_one_hot[batch_index])
+
+                for k,idx_batch in enumerate(batch_index.tolist()):
+                    self.prediction_matrix[idx_batch][i]= batch_preds[k]
+
+        # Then take the mean of all my elbo samples
+        self.mean_elbos = np.mean(self.prediction_matrix, axis=1).flatten().tolist()
+
+        self.wt_elbo = self.mean_elbos.pop(0)
+        self.mutant_sequences_descriptor.pop(0)
+
+        self.delta_elbos = np.asarray(self.mean_elbos) - self.wt_elbo
+
+        if filename_prefix == "":
+            return self.mutant_sequences_descriptor, self.delta_elbos
+
+        else:
+
+            OUTPUT = open(filename_prefix+"_samples-"+str(N_pred_iterations)\
+                +"_elbo_predictions.csv", "w")
+
+            for i,descriptor in enumerate(self.mutant_sequences_descriptor):
+                OUTPUT.write(descriptor+";"+str(self.delta_elbos[i])+"\n")
+
+            OUTPUT.close()
 
     def custom_mutant_matrix_df(self, input_filename, model, mutant_col, effect_col, N_pred_iterations=2000, \
                                 minibatch_size=2000, output_filename_prefix="", silent_allowed=False,
@@ -792,35 +772,6 @@ class DataHelper:
                 mutant_sequences.append("".join(focus_seq_copy))
                 valid_mutants.append(mutants)
 
-        # for i, line in enumerate(tqdm(INPUT)):
-        #     if not tqdm_available and i % 10 == 0:
-        #         print(i)
-        #     line = line.rstrip()
-        #     if i >= 1:
-        #         line_list = line.split(",")
-        #         # generate the list of mutants
-        #         mutant_list = line_list[0].split(":")
-        #         valid_mutant = True
-        #
-        #         # if any of the mutants in this list aren"t in the focus sequence,
-        #         #    I cannot make a prediction
-        #         for mutant in mutant_list:
-        #             if mutant not in mutant_to_letter_pos_idx_focus_list:
-        #                 valid_mutant = False
-        #
-        #         # If it is a valid mutant, add it to my list to make predictions
-        #         if valid_mutant:
-        #             focus_seq_copy = list(self.focus_seq_trimmed)[:]
-        #
-        #             for mutant in mutant_list:
-        #                 wt_aa, pos, idx_focus = mutant_to_letter_pos_idx_focus_list[mutant]
-        #                 mut_aa = mutant[-1]
-        #                 focus_seq_copy[idx_focus] = mut_aa
-        #
-        #             self.mutant_sequences.append("".join(focus_seq_copy))
-        #             self.mutant_sequences_descriptor.append(":".join(mutant_list))
-        #
-        # INPUT.close()
         print("Number of valid mutant sequences:", len(mutant_sequences))
         if len(mutant_sequences) == 0:
             raise ValueError("No valid mutant sequences found")
@@ -878,112 +829,105 @@ class DataHelper:
 
         print("Written to file", output_filename)
 
-    # def custom_sequences(self, input_filename, model, N_pred_iterations=10, \
-    #         minibatch_size=2000, filename_prefix="", offset=0):
-    #
-    #     """ Predict the delta elbo for a custom mutation filename
-    #     """
-    #     # Get the start and end index from the sequence name
-    #     start_idx, end_idx = self.focus_seq_name.split("/")[-1].split("-")
-    #     start_idx = int(start_idx)
-    #
-    #     wt_pos_focus_idx_tuple_list = []
-    #     focus_seq_index = 0
-    #     focus_seq_list = []
-    #     mutant_to_letter_pos_idx_focus_list = {}
-    #
-    #     self.mutant_sequences = ["".join(self.focus_seq_trimmed)]
-    #     self.mutant_sequences_descriptor = ["wt"]
-    #
-    #     # run through the input file
-    #     if not os.path.isfile(input_filename):
-    #         input_filename = os.path.join(self.working_dir, input_filename)
-    #         assert os.path.isfile(input_filename), "File not found: "+input_filename
-    #
-    #     INPUT = open(input_filename, "r")
-    #     #INPUT = open(input_filename, "r")
-    #     header = ''
-    #     new_line = ''
-    #     aa_s = set('ACDEFGHIKLNMPQRSTVWY-')
-    #
-    #     print("focus_seq", self.focus_seq)
-    #     print("focus_seq_trimmed", self.focus_seq_trimmed)
-    #
-    #     for i,line in enumerate(INPUT):
-    #         line = line.rstrip()
-    #         # if encountering header, after first, add prev entry to list
-    #         if line[0] == '>':
-    #             new_line = ''.join([aa for ix, aa in enumerate(new_line) if (ix in self.focus_cols)])
-    #             if len(new_line) == len(self.focus_seq_trimmed) and set(new_line).issubset(aa_s):
-    #                 self.mutant_sequences.append(new_line) #hack?
-    #                 self.mutant_sequences_descriptor.append(header)
-    #             else:
-    #                 print(len(new_line))
-    #                 print(set(new_line) - aa_s)
-    #             header = line[1:]
-    #             new_line = ''
-    #         else:
-    #             new_line = new_line + line
-    #
-    #     INPUT.close()
-    #
-    #     # add final entry
-    #     new_line = ''.join([aa for aa in new_line if (aa in aa_s)])
-    #     if len(new_line) == len(self.focus_seq_trimmed):
-    #         self.mutant_sequences.append(new_line)
-    #         self.mutant_sequences_descriptor.append(header)
-    #
-    #     print("alphabet", self.alphabet)
-    #
-    #     print("mutant seqs descriptor [0]", self.mutant_sequences_descriptor[0])
-    #     print("mutant seqs[0]", self.mutant_sequences[0])
-    #     print("mutant seqs descriptor [1]", self.mutant_sequences_descriptor[1])
-    #     print("mutant seqs[1]", self.mutant_sequences[1])
-    #
-    #     # Then make the one hot sequence
-    #     self.mutant_sequences_one_hot = np.zeros(\
-    #         (len(self.mutant_sequences),len(self.focus_cols),len(self.alphabet)))
-    #
-    #     for i,sequence in enumerate(self.mutant_sequences):
-    #         for j,letter in enumerate(sequence):
-    #             if letter in self.aa_dict:
-    #                 k = self.aa_dict[letter]
-    #                 self.mutant_sequences_one_hot[i,j,k] = 1.0
-    #
-    #     self.prediction_matrix = np.zeros((self.mutant_sequences_one_hot.shape[0],N_pred_iterations))
-    #
-    #     batch_order = np.arange(self.mutant_sequences_one_hot.shape[0])
-    #
-    #     for i in range(N_pred_iterations):
-    #         np.random.shuffle(batch_order)
-    #
-    #         for j in range(0,self.mutant_sequences_one_hot.shape[0],minibatch_size):
-    #
-    #             batch_index = batch_order[j:j+minibatch_size]
-    #             batch_preds, _, _ = model.all_likelihood_components(self.mutant_sequences_one_hot[batch_index])
-    #
-    #             for k,idx_batch in enumerate(batch_index.tolist()):
-    #                 self.prediction_matrix[idx_batch][i]= batch_preds[k]
-    #
-    #     # Then take the mean of all my elbo samples
-    #     self.mean_elbos = np.mean(self.prediction_matrix, axis=1).flatten().tolist()
-    #
-    #     self.wt_elbo = self.mean_elbos.pop(0)
-    #     self.mutant_sequences_descriptor.pop(0)
-    #
-    #     self.delta_elbos = np.asarray(self.mean_elbos) - self.wt_elbo
-    #
-    #     if filename_prefix == "":
-    #         return self.mutant_sequences_descriptor, self.delta_elbos
-    #
-    #     else:
-    #
-    #         OUTPUT = open(filename_prefix, "w")
-    #
-    #         for i,descriptor in enumerate(self.mutant_sequences_descriptor):
-    #             OUTPUT.write(descriptor+","+str(self.delta_elbos[i])+"\n")
-    #
-    #         OUTPUT.close()
+    def custom_sequences(self, input_filename, model, N_pred_iterations=10, \
+            minibatch_size=2000, filename_prefix="", offset=0):
+
+        """ Predict the delta elbo for a custom mutation filename
+        """
+        # Get the start and end index from the sequence name
+        start_idx, end_idx = self.focus_seq_name.split("/")[-1].split("-")
+        start_idx = int(start_idx)
+
+        wt_pos_focus_idx_tuple_list = []
+        focus_seq_index = 0
+        focus_seq_list = []
+        mutant_to_letter_pos_idx_focus_list = {}
+
+        self.mutant_sequences = ["".join(self.focus_seq_trimmed)]
+        self.mutant_sequences_descriptor = ["wt"]
+
+        # run through the input file
+        if not os.path.isfile(input_filename):
+            input_filename = os.path.join(self.working_dir, input_filename)
+            assert os.path.isfile(input_filename), "File not found: "+input_filename
+
+        INPUT = open(input_filename, "r")
+        #INPUT = open(input_filename, "r")
+        header = ''
+        new_line = ''
+        aa_s = set('ACDEFGHIKLNMPQRSTVWY-')
+
+        print("focus_seq", self.focus_seq)
+        print("focus_seq_trimmed", self.focus_seq_trimmed)
+
+        for i,line in enumerate(INPUT):
+            line = line.rstrip()
+            # if encountering header, after first, add prev entry to list
+            if line[0] == '>':
+                new_line = ''.join([aa for ix, aa in enumerate(new_line) if (ix in self.focus_cols)])
+                if len(new_line) == len(self.focus_seq_trimmed) and set(new_line).issubset(aa_s):
+                    self.mutant_sequences.append(new_line) #hack?
+                    self.mutant_sequences_descriptor.append(header)
+                else:
+                    print(len(new_line))
+                    print(set(new_line) - aa_s)
+                header = line[1:]
+                new_line = ''
+            else:
+                new_line = new_line + line
+
+        INPUT.close()
+
+        # add final entry
+        new_line = ''.join([aa for aa in new_line if (aa in aa_s)])
+        if len(new_line) == len(self.focus_seq_trimmed):
+            self.mutant_sequences.append(new_line)
+            self.mutant_sequences_descriptor.append(header)
+
+        # Then make the one hot sequence
+        self.mutant_sequences_one_hot = np.zeros(\
+            (len(self.mutant_sequences),len(self.focus_cols),len(self.alphabet)))
+
+        for i,sequence in enumerate(self.mutant_sequences):
+            for j,letter in enumerate(sequence):
+                if letter in self.aa_dict:
+                    k = self.aa_dict[letter]
+                    self.mutant_sequences_one_hot[i,j,k] = 1.0
+
+        self.prediction_matrix = np.zeros((self.mutant_sequences_one_hot.shape[0],N_pred_iterations))
+
+        batch_order = np.arange(self.mutant_sequences_one_hot.shape[0])
+
+        for i in range(N_pred_iterations):
+            np.random.shuffle(batch_order)
+
+            for j in range(0,self.mutant_sequences_one_hot.shape[0],minibatch_size):
+
+                batch_index = batch_order[j:j+minibatch_size]
+                batch_preds, _, _ = model.all_likelihood_components(self.mutant_sequences_one_hot[batch_index])
+
+                for k,idx_batch in enumerate(batch_index.tolist()):
+                    self.prediction_matrix[idx_batch][i]= batch_preds[k]
+
+        # Then take the mean of all my elbo samples
+        self.mean_elbos = np.mean(self.prediction_matrix, axis=1).flatten().tolist()
+
+        self.wt_elbo = self.mean_elbos.pop(0)
+        self.mutant_sequences_descriptor.pop(0)
+
+        self.delta_elbos = np.asarray(self.mean_elbos) - self.wt_elbo
+
+        if filename_prefix == "":
+            return self.mutant_sequences_descriptor, self.delta_elbos
+
+        else:
+
+            OUTPUT = open(filename_prefix, "w")
+
+            for i,descriptor in enumerate(self.mutant_sequences_descriptor):
+                OUTPUT.write(descriptor+","+str(self.delta_elbos[i])+"\n")
+
+            OUTPUT.close()
 
     def get_pattern_activations(self, model, update_num, filename_prefix="",
                                 verbose=False, minibatch_size=2000):
