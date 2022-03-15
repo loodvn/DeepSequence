@@ -67,7 +67,7 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --model_checkpoint $model_checkpoint_dir \
   --dms_index $DATASET_ID \
   --samples 2000 \
-  --batch_size 4000 \
+  --batch_size 8000 \
   --seed "$SEED"
 #  --theta-override 0.9
 
