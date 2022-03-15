@@ -50,9 +50,10 @@ def create_parser():
     parser.add_argument("--dms_index", type=int, required=True)
     parser.add_argument("--model_checkpoint", type=str, required=True)
     parser.add_argument("--dms_mapping", type=str, required=True)
-    # parser.add_argument("--weights_dir", type=str, required=True)  # Don't need weights dir for the scoring?
     parser.add_argument("--seed", type=int)
     parser.add_argument("--msa_use_uniprot", action="store_true")
+    # Mirror default in helper.py
+    parser.add_argument("--batch_size", type=int, default=2000, help="Batch size for ELBO estimation")
     return parser
 
 
@@ -117,6 +118,7 @@ def main(args):
         mutant_col=mutant_col,
         effect_col=DMS_phenotype_name,
         N_pred_iterations=args.samples,
+        minibatch_size=args.batch_size,
         output_filename_prefix=dms_output,
         silent_allowed=True,
         random_seed=args.seed,

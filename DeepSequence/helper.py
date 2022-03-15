@@ -841,8 +841,9 @@ class DataHelper:
         print("Getting ELBOs over ", N_pred_iterations, " iterations and ", minibatch_size, " size minibatches")
         print("Prediction matrix size:", prediction_matrix.shape)
 
-        # Why not batch along the iterations direction? if we have < minibatch_size mutants this doesn't help.
+        # Why not batch along the iterations direction? if we have mutants < minibatch_size this doesn't help.
         #  Although if iterations is too big, it may not fit in a minibatch.
+        #  And if mutants is too big, it may also not fit.
         for i in tqdm(range(N_pred_iterations)):
             if not tqdm_available and i % 10 == 0:
                 print(i)
