@@ -12,7 +12,8 @@
 
 #SBATCH --job-name="deepseq_calcweights_11_26_2021"
 # Job array-specific
-#SBATCH --output=slurm_files/slurm-lvn-%A_%a-%x.out  # File to which STDOUT + STDERR will be written, %A: jobID, %a: array task ID, %x: jobname
+# Nice tip: using %3a to pad job array number to 3 digits (23 -> 023)
+#SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out  # File to which STDOUT + STDERR will be written, %A: jobID, %a: array task ID, %x: jobname
 #SBATCH --array=0-41%10  		  # Job arrays (e.g. 1-100 with a maximum of 5 jobs at once)
 ##SBATCH --array=0,1			      # Resubmitting / testing only first job
 
