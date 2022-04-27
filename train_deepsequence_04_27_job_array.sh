@@ -34,7 +34,6 @@
 set -e # fail fully on first line failure (from Joost slurm_for_ml)
 
 # Note: Remember to clear ~/.theano cache before running this script
-
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
 echo "GPU available: $(nvidia-smi)"

@@ -9,12 +9,11 @@
 #SBATCH --mail-type=TIME_LIMIT_80,TIME_LIMIT,FAIL,ARRAY_TASKS
 #SBATCH --mail-user="lodevicus_vanniekerk@hms.harvard.edu"
 
-#SBATCH --job-name="deepseq_calcweights_11_26_2021"
+#SBATCH --job-name="deepseq_calcweights_b05_javier"
 # Job array-specific
 # Nice tip: using %3a to pad job array number to 3 digits (23 -> 023)
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out  # File to which STDOUT + STDERR will be written, %A: jobID, %a: array task ID, %x: jobname
-#SBATCH --array=0-41%10  		  # Job arrays (e.g. 1-100 with a maximum of 5 jobs at once)
-##SBATCH --array=0,1			      # Resubmitting / testing only first job
+#SBATCH --array=0-63%10  		  # Job arrays (e.g. 1-100 with a maximum of 5 jobs at once)
 
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
@@ -25,9 +24,12 @@ echo "Git last commit: $(git log -1)"
 
 # To generate this file from a directory, just do e.g. 'ls -1 /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/*.a2m > msas_original.txt'
 #lines=( $(cat "msas_original.txt") ) # Old alignments, in /n/groups/marks/projects/marks_lab_and_oatml/protein_transformer/MSA/deepsequence/
-lines=( $(cat "msas_new_11_26_2021.txt") )  # New alignments, in datasets/alignments/ REMEMBER TO RENAME WEIGHTS OUT AND ALIGNMENTS_DIR
+lines=( $(cat "msa_b05_javier.txt") )  # New alignments, in datasets/alignments/ REMEMBER TO RENAME WEIGHTS OUT AND ALIGNMENTS_DIR
 dataset_name=${lines[$SLURM_ARRAY_TASK_ID]}
 echo $dataset_name
+
+export WEIGHTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/weights_b05_javier/
+export ALIGNMENTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/alignments_b05_javier/
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh gpu_logs &
@@ -35,6 +37,6 @@ echo $dataset_name
 srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/python \
   /n/groups/marks/users/lood/DeepSequence_runs/calc_weights.py \
   --dataset $dataset_name \
-  --weights_dir_out /n/groups/marks/users/lood/DeepSequence_runs/weights_2021_11_16/ \
-  --alignments_dir datasets/alignments/
+  --weights_dir_out $WEIGHTS_DIR \
+  --alignments_dir $ALIGNMENTS_DIR \
 #  --theta-override 0.9
