@@ -38,6 +38,9 @@ set -e # fail fully on first line failure (from Joost slurm_for_ml)
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
 echo "GPU available: $(nvidia-smi)"
+echo "Git branch: $(git rev-parse --abbrev-ref HEAD)"
+#echo "Git commit: $(git rev-parse HEAD)"
+echo "Git last commit: $(git log -1)"
 module load gcc/6.2.0 cuda/9.0
 export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise will only raise a warning and carry on with CPU
 
