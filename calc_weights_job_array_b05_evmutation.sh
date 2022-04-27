@@ -28,8 +28,8 @@ lines=( $(cat "msa_b05_javier.txt") )  # New alignments, in datasets/alignments/
 dataset_name=${lines[$SLURM_ARRAY_TASK_ID]}
 echo $dataset_name
 
-export WEIGHTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/weights_b05_javier/
-export ALIGNMENTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/alignments_b05_javier/
+export WEIGHTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/weights_b05_javier/
+export ALIGNMENTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/alignments_b05_javier/
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh gpu_logs &

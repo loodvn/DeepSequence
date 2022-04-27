@@ -56,8 +56,8 @@ echo "seed: $SEED"
 dataset_name=${lines[$DATASET_ID]}
 echo "dataset name: $dataset_name"
 
-export WEIGHTS_DIR=weights_b05_javier
-export ALIGNMENTS_DIR=alignments_b05_javier
+export WEIGHTS_DIR=data/weights_b05_javier
+export ALIGNMENTS_DIR=data/alignments_b05_javier
 
 # Monitor GPU usage (store outputs in ./gpu_logs/)
 /home/lov701/job_gpu_monitor.sh --interval 1m gpu_logs &
