@@ -34,14 +34,14 @@ if __name__ == "__main__":
     start_time = time.time()
 
     if args.mapping_file:
-        assert os.path.isfile(args.mapping_file), f"Mapping file {args.mapping_file} does not exist."
+        assert os.path.isfile(args.mapping_file), "Mapping file {} does not exist.".format(args.mapping_file)
         df_mapping = pd.read_csv(args.mapping_file)
         df_mapping = df_mapping.drop_duplicates(subset='UniProt_ID')
         # Find correct theta for UniProt_ID == protein_name
         # TODO Note: This fails for some of the MSA,weight pairs in the original DeepSeq dataset,
         #  since they don't have unique UniProt ids
         dataset_prefix = "_".join(args.dataset.split("_")[:2])
-        assert dataset_prefix in df_mapping['UniProt_ID'].values, f"Dataset prefix {dataset_prefix} not found in mapping file."
+        assert dataset_prefix in df_mapping['UniProt_ID'].values, "Dataset prefix {} not found in mapping file.".format(dataset_prefix)
         theta = float(df_mapping[df_mapping["UniProt_ID"] == dataset_prefix]['theta'])
 
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
