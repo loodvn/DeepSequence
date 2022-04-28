@@ -1,5 +1,8 @@
 # Basically a copy of the first part of run_svi.py, but not loading the model after calculating the weights
+import os
+
 import numpy as np
+import pandas as pd
 import time
 import sys
 
@@ -15,6 +18,7 @@ parser.add_argument("--theta-override", type=float, default=None,
 # Keeping this different from weights_dir just so that we don't make mistakes and overwrite weights
 parser.add_argument("--alignments_dir", type=str, help="Overrides the default ./datasets/alignments/")
 parser.add_argument("--weights_dir_out", type=str, default="", help="Location to store weights.")
+parser.add_argument("--mapping_file", type=str, help="Lood: A DMS mapping file with UniProt ID -> theta weight")
 args = parser.parse_args()
 
 # DataHelper expects the dataset name without extension
@@ -28,6 +32,17 @@ data_params = {
 
 if __name__ == "__main__":
     start_time = time.time()
+
+    if args.mapping_file:
+        assert os.path.isfile(args.mapping_file), f"Mapping file {args.mapping_file} does not exist."
+        df_mapping = pd.read_csv(args.mapping_file)
+        df_mapping = df_mapping.drop_duplicates(subset='UniProt_ID')
+        # Find correct theta for UniProt_ID == protein_name
+        # TODO Note: This fails for some of the MSA,weight pairs in the original DeepSeq dataset,
+        #  since they don't have unique UniProt ids
+        dataset_prefix = "_".join(args.dataset.split("_")[:2])
+        assert dataset_prefix in df_mapping['UniProt_ID'].values, f"Dataset prefix {dataset_prefix} not found in mapping file."
+        theta = float(df_mapping[df_mapping["UniProt_ID"] == dataset_prefix]['theta'])
 
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
                                     working_dir='.',

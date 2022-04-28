@@ -15,6 +15,10 @@
 #SBATCH --output=slurm_files/slurm-lvn-%A_%3a-%x.out  # File to which STDOUT + STDERR will be written, %A: jobID, %a: array task ID, %x: jobname
 #SBATCH --array=0-63%10  		  # Job arrays (e.g. 1-100 with a maximum of 5 jobs at once)
 
+######################################################################
+
+set -e # fail fully on first line failure (from Joost slurm_for_ml)
+
 echo "hostname: $(hostname)"
 echo "Running from: $(pwd)"
 echo "GPU available: $(nvidia-smi)"
@@ -30,9 +34,6 @@ echo $dataset_name
 
 export WEIGHTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/weights_b05_javier/
 export ALIGNMENTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/alignments_b05_javier/
-
-# Monitor GPU usage (store outputs in ./gpu_logs/)
-/home/lov701/job_gpu_monitor.sh gpu_logs &
 
 srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/python \
   /n/groups/marks/users/lood/DeepSequence_runs/calc_weights.py \

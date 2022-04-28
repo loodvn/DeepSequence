@@ -83,6 +83,8 @@ class DataHelper:
         # Note: Script will fail if calc_weights is True and theta is not set
         if theta is not None:
             self.theta = theta
+        if calc_weights and theta is None:
+            raise ValueError("Must set theta if calc_weights is True")
         # If I am running tests with the model, I don't need all the
         #    sequences loaded
         self.load_all_sequences = load_all_sequences
