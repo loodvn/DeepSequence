@@ -34,10 +34,12 @@ echo $dataset_name
 
 export WEIGHTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/weights_b05_javier/
 export ALIGNMENTS_DIR=/n/groups/marks/users/lood/DeepSequence_runs/data/alignments_b05_javier/
+export MAPPING_FILE=/n/groups/marks/users/lood/DeepSequence_runs/DMS_mapping_20220427.csv
 
 srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/python \
   /n/groups/marks/users/lood/DeepSequence_runs/calc_weights.py \
   --dataset $dataset_name \
   --weights_dir_out $WEIGHTS_DIR \
   --alignments_dir $ALIGNMENTS_DIR \
+  --mapping_file $MAPPING_FILE
 #  --theta-override 0.9
