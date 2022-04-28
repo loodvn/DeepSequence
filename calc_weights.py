@@ -33,6 +33,8 @@ data_params = {
 if __name__ == "__main__":
     start_time = time.time()
 
+    theta = None
+
     if args.mapping_file:
         assert os.path.isfile(args.mapping_file), "Mapping file {} does not exist.".format(args.mapping_file)
         df_mapping = pd.read_csv(args.mapping_file)
@@ -44,9 +46,12 @@ if __name__ == "__main__":
         assert dataset_prefix in df_mapping['UniProt_ID'].values, "Dataset prefix {} not found in mapping file.".format(dataset_prefix)
         theta = float(df_mapping[df_mapping["UniProt_ID"] == dataset_prefix]['theta'])
 
+    if args.theta_override:
+        theta = args.theta_override
+
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
                                     working_dir='.',
-                                    theta=args.theta_override,
+                                    theta=theta,
                                     weights_dir=data_params["weights_dir"],
                                     calc_weights=True,
                                     alignments_dir=args.alignments_dir,
