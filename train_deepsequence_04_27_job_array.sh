@@ -47,7 +47,6 @@ export THEANO_FLAGS='floatX=float32,device=cuda,force_device=True' # Otherwise w
 lines=( $(cat "msa_b05_javier.txt") ) # Javier EVMutation b05 MSAs
 DATASET_ID=$(($SLURM_ARRAY_TASK_ID % 100))  # Group a run of datasets together
 seed_id=$(($SLURM_ARRAY_TASK_ID / 100))
-seed_id=$SLURM_ARRAY_TASK_ID
 seeds=(1 2 3 4 5)  # For some reason Theano won't accept seed 0..
 SEED=${seeds[$seed_id]}
 echo "DATASET_ID: $DATASET_ID, seed: $SEED"
