@@ -40,5 +40,6 @@ srun stdbuf -oL -eL /n/groups/marks/users/aaron/deep_seqs/deep_seqs_env/bin/pyth
   --dataset $dataset_name \
   --weights_dir_out $WEIGHTS_DIR \
   --alignments_dir $ALIGNMENTS_DIR \
-  --mapping_file $MAPPING_FILE
+  --mapping_file $MAPPING_FILE \
+  --skip_existing
 #  --theta-override 0.9
