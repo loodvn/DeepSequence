@@ -19,6 +19,7 @@ parser.add_argument("--theta-override", type=float, default=None,
 parser.add_argument("--alignments_dir", type=str, help="Overrides the default ./datasets/alignments/")
 parser.add_argument("--weights_dir_out", type=str, default="", help="Location to store weights.")
 parser.add_argument("--mapping_file", type=str, help="Lood: A DMS mapping file with UniProt ID -> theta weight")
+parser.add_argument("--skip_existing", action="store_true", help="Skip if existing weights are found.")
 args = parser.parse_args()
 
 # DataHelper expects the dataset name without extension
@@ -48,6 +49,16 @@ if __name__ == "__main__":
 
     if args.theta_override:
         theta = args.theta_override
+
+    # Skip_existing would be nice to have inside data_helper, but for now we'll just do it here
+    weights_out_filename = os.path.join(args.weights_dir_out, "{}_theta_{}.npy".format(args.dataset, theta))
+    if os.path.isfile(weights_out_filename):
+        print("Weights file {} exists".format(weights_out_filename))
+        if args.skip_existing:
+            print("Skipping without error.")
+            sys.exit(0)
+        else:
+            print("Overwriting existing weights file.")
 
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
                                     working_dir='.',
