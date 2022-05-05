@@ -1,11 +1,16 @@
+import os
+
 import numpy as np
 import time
 import sys
 sys.path.insert(0, "./DeepSequence/")
+import argparse
+
+import pandas as pd
+
 import model
 import helper
 import train
-import argparse
 
 parser = argparse.ArgumentParser(description="Train DeepSequence with SVI.")
 parser.add_argument("--dataset", type=str, default="BLAT_ECOLX",
@@ -19,14 +24,9 @@ parser.add_argument("--n-latent-override", type=int, default=None,
 parser.add_argument("--weights_dir", type=str, default="", help="Location of precomputed weights, if possible")
 parser.add_argument("--alignments_dir", type=str, help="Location of alignments")
 parser.add_argument("--seed", type=int, help="Random seed override (for model ensembling).")
+parser.add_argument('--MSA_mapping', type=str, help='List of proteins and corresponding MSA file name')
+parser.add_argument('--protein_index', type=int, help='Row index of protein in input mapping file')
 args = parser.parse_args()
-
-args.dataset = args.dataset.split(".a2m")[0]
-
-data_params = {
-    "dataset"       :   args.dataset,
-    "weights_dir"	:   args.weights_dir,
-    }
 
 if args.seed is not None:
     print("Using seed: {}".format(args.seed))
@@ -60,10 +60,41 @@ if args.n_latent_override:
 
 if __name__ == "__main__":
     start_time = time.time()
+
+    theta = None
+
+    # Load details from mapping file
+    if args.MSA_mapping is not None:
+        assert args.protein_index is not None, "Must provide protein index if mapping CSV is provided."
+        assert os.path.isfile(args.MSA_mapping), "Mapping CSV file {} does not exist.".format(args.MSA_mapping)
+        mapping_df = pd.read_csv(args.MSA_mapping)
+        # protein_name = mapping_df['protein_name'][args.protein_index]
+        dataset = mapping_df['msa_location'][args.protein_index]
+        # print("Protein name: " + str(protein_name))
+        print("Dataset: " + str(dataset))
+        try:
+            theta = float(mapping_df['theta'][args.protein_index])
+        except:
+            # Later if theta is None, it'll fail unless one of the hardcoded datasets.
+            print("Could not load theta from mapping file.")
+    else:
+        dataset = args.dataset
+
+    dataset = dataset.split(".a2m")[0]
+
+    data_params = {
+        "dataset": dataset,
+        "weights_dir": args.weights_dir,
+    }
+
+    if args.theta_override is not None:
+        theta = args.theta_override
+        print("Using theta override: {}".format(theta))
+
     data_helper = helper.DataHelper(dataset=data_params["dataset"],
                                     working_dir='.',
                                     calc_weights=False,  # Use precomputed weights
-                                    theta=args.theta_override,
+                                    theta=theta,
 				                    weights_dir=data_params["weights_dir"],
                                     alignments_dir=args.alignments_dir,
     )
